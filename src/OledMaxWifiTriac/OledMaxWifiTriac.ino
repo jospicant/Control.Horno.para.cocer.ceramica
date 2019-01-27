@@ -7,7 +7,7 @@
 //*******************************************  Wifi conexión ESP a Router **********************************************
 IPAddress ip,gateway,mask; 
 char ssid[] = "yourSSID"; // También valdría string ssid[] = "nombre_wifi";
-char pass[] = "yourPassw"; // También valdría string pass[] = "contraseña_wifi";
+char pass[] = "yourPassW"; // También valdría string pass[] = "contraseña_wifi";
 boolean conectado=false;
 //**********************************************************************************************************************
 
@@ -18,7 +18,7 @@ WiFiClient clienteThingSpeak;   // Objeto Cliente de ThingSpeak
 boolean ThingSpeakON;
 
 char direccionThingSpeak[] = "api.thingspeak.com";
-String APIKey = "yourAPIKeydeEscritura";
+String APIKey = "yourAPIKEYdeThingSpeak";
 int muestreo = 20 * 1000; //  Enviaremos datos a un canal determinado de ThingSpeak cada 20 sg 
 long tiempoActual,tiempoAnterior;
 
@@ -54,27 +54,37 @@ byte dutty=100;
 float t1=0,t2=0;
 bool estadoPWM=false;
 
+// PID
+int kp=0.8;  int ki=0.3;  int kd=1.8;   
+int PID_p=0; int PID_i=0; int PID_d=0;
+float target=temp[1];                                       // Tª objetivo
+float PID_errorActual=0,PID_errorAnterior=0;                // Error Anterior y Actual respecto al valor objetivo marcado
+int PID_valor=0;
+float t1_pid=0,t2_pid=0;                 //muestreo pid      marcas de tiempo para controlar el muestreo PID cada TmuestreoPID ms
+float TmuestreoPID=100;                 // Periodo de muestreo del PID
+
+
 //*********************************************************************************************************************
 
 
 void setup() {
 
   
-  pinMode(triac,OUTPUT);              // Configuración pin de activación del triac
+  pinMode(triac,OUTPUT);              // Configuración pin de activación del triac.  El Triac lo activamos por el pin D4
   digitalWrite(triac,Apagado);
 
   Serial.begin(115200);
 
   maxthermo.begin();                  //************ Max *************************                
-  maxthermo.setThermocoupleType(MAX31856_TCTYPE_S);
+  maxthermo.setThermocoupleType(MAX31856_TCTYPE_S);         // Estoy usando una sonda termopar del tipo S
 
   display.init();                     //******************** display **************
   if (flipDisplay) display.flipScreenVertically();
 
   /* Mostramos la pantalla de bienvenida */
   display.clear();
-  display.setFont(ArialMT_Plain_16);
-  display.drawString(10, 25, "Horno");
+  display.setFont(ArialMT_Plain_16);     // Tipo de fuente a usar
+  display.drawString(10, 25, "Horno");   // Mensaje inicial
   display.display();
   delay(1000);
 
@@ -133,6 +143,7 @@ void setup() {
 
   tiempoAnterior=millis();              // inicio cronómetro para envio a ThingSpeak
   t1=millis();                        // inicio cronómetro para PWM del triac
+  t1_pid=millis();
   
 } 
 
@@ -156,25 +167,39 @@ void loop() {
   EnviarDatosThingSpeak(datosThingSpeak);      //Envia y revisaremos si han pasado 20 sg con la función millis
   }
 
+  //PID ***************************************
 
+  t2_pid=millis();
+  
+  if( (t2_pid-t1_pid) >= TmuestreoPID){          //Solo recalculo el PID cada cierto tiempo ( Periodo de muestreo )
+
+    t1_pid=millis();             //reinicio cronómetro cuenta del muestreo
+    
+    PID_errorActual=target-valor;      //Cálculo del ERROR
+    PID_p=kp*PID_errorActual;          //calculo parte proporcional
+    if( PID_errorActual > -3  &  PID_errorActual <3 ){        // Si el error de temperatura está + - 3 grados --> aplico parte integral
+        PID_i=PID_i+(ki*PID_errorActual);
+       }
+    PID_d=kd*(PID_errorActual-PID_errorAnterior)/TmuestreoPID;
+    PID_valor=PID_p+PID_d+PID_i;
+
+    if (PID_valor < 0) {
+    PID_valor=0;
+    }else if (PID_valor > 100){
+    PID_valor=100;
+    }
+    PID_errorAnterior=PID_errorActual;
+   }else{
+    t1_pid=t1_pid;  // No hago nada
+  }
 
   //Control Temperatura a 100 grados   **************************************
-  
-  if (valor < 90 ){
-    bool estadoPWM = PWMtriac(Tpwm,40);   // Mientras esté a menos de 80 grados aplico un PWM de T=20sg y Dutty=40;
+
+    dutty=(byte)PID_valor;
+    Serial.print("Cálculo Dutty desde el PID = "); Serial.println(dutty);
+    bool estadoPWM = PWMtriac(Tpwm,dutty);   // El Cálculo del PID me dirá cada 100 ms que PWM debo aplicar al horno para llegar al Target deseado
     digitalWrite(triac,estadoPWM);
-    Serial.print("<90, ");Serial.println(estadoPWM);
-    }
-  else if ( valor >= 90 & valor <100 ){      // Dejo casi apagado ( subirá por el acumulado )
-    bool estadoPWM = PWMtriac(Tpwm,1);
-    digitalWrite(triac,estadoPWM);
-    Serial.print("entre 90 y 100, ");Serial.println(estadoPWM);
-  }
-  else if ( valor >= 100 ){               // Le dejo un 10% de dutty para intentar mantenerlo a una temp fija durante media hora o que suba muy poquito a poquito en esa media hora
-    bool estadoPWM = PWMtriac(Tpwm,5);
-    digitalWrite(triac,estadoPWM);
-    Serial.print(" >100 ");Serial.println(estadoPWM);
-  }
+   
    
    // Nota: He apreciado que con un PWM 5% sobre T=20sg  ( 1sg) la temperatura se llega a estabilizar y al final incluso empieza a subir un poco si mantenemos ese dutty
    // así durante media hora  ( tengo mi media hora estable para cambiar a otro punto de temperatura )
@@ -214,7 +239,7 @@ void loop() {
 //******************************************** Funciones Adicionales *************************************************************************
 
 
-void DatosDeLaConexion(){
+void DatosDeLaConexion(){            // Mostrar los datos de mi conexión.  SSID Wifi,IP,Gateway,máscara de red...
 
     ip=WiFi.localIP();
     gateway=WiFi.gatewayIP();
@@ -234,14 +259,15 @@ void DatosDeLaConexion(){
     display.display();
 }
 
-boolean ConexionConThingSpeak(){
-   // Establecemos la conexión del cliente con el servidor de ThingSpeak
+ //*********************************** Establecemos la conexión del cliente con el servidor de ThingSpeak  ***********************************
+boolean ConexionConThingSpeak(){     
    if (clienteThingSpeak.connect(direccionThingSpeak,80)) {
    return (true);
    }else
    return (false);
 }
 
+//************ Configuración del paquete a enviar a la plataforma ThingSpeak *****************************************************************
 void EnviarDatosThingSpeak(String datos){
   
   // Establecemos la conexión con el cliente
@@ -275,6 +301,10 @@ void EnviarDatosThingSpeak(String datos){
 }
 
 //************************************************************ PWM del triac ********************************************
+//Controlamos cuanto tiempo está encendido el triac dado un periodo T 
+// T = el periodo del PWM configurado y  D = dutty en %  
+// Ejemplo:  PWM(20000,30) => para un periodo de 20 sg, el triac estaría estar un 30%(6sg) encendido y un 70% apagado (14sg)
+//***********************************************************************************************************************
 bool PWMtriac(int T,byte D){
   
   t2=millis();
