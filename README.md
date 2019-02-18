@@ -12,6 +12,6 @@ Por lo cual se trata de actualizar el controlador usando:
 
 Nos apoyamos en la plataforma "ThingSpeak" para crear un canal sobre el cual enviaremos cada 20sg la temperatura del horno de forma que podamos monitorizar en todo momento la temperatura del horno.
 
-### Agradecimientos
+## Agradecimientos  
 
-Agradecer a <br>Adafruit</br> por poder usar su librería para el MAX31856 y a <br>Luis del Valle</br> por su la información ofrecida en sus cursos de Arduino en <br>programarfacil.com</br>, gracias a ellos he podido aprender como conectar con la plataforma ThingSpeak.
+Agradecer a <b>Adafruit</b> por su librería para el manejo del MAX31856
