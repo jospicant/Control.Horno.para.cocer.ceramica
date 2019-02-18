@@ -14,4 +14,4 @@ Nos apoyamos en la plataforma "ThingSpeak" para crear un canal sobre el cual env
 
 ### Agradecimientos
 
-Agradecer a Adafruit por poder usar su librería para el MAX31856 y a Luis del Valle por su la información ofrecida en sus cursos de Arduino en programarfacil.com, gracias a ellos he podido aprender como conectar con la plataforma ThingSpeak.
+Agradecer a <br>Adafruit</br> por poder usar su librería para el MAX31856 y a <br>Luis del Valle</br> por su la información ofrecida en sus cursos de Arduino en <br>programarfacil.com</br>, gracias a ellos he podido aprender como conectar con la plataforma ThingSpeak.
