@@ -14,4 +14,4 @@ Nos apoyamos en la plataforma "ThingSpeak" para crear un canal sobre el cual env
 
 ## Agradecimientos  
 
-Agradecer a <b>Adafruit</b> por su librería para el manejo del MAX31856 y a <b>Luis del Valle</b> por su magnífica documentación en <b>programarfacil.com</b> así como a <b>ThingSpeak</b> por su maravillosa plataforma para el iot que nos permite de forma fácil conectar nuestros dispositivos a la nube y realizar un poco de iot.
+Agradecer a <b>Adafruit</b> por su librería para el manejo del MAX31856 y a <b>Luis del Valle</b> por su magnífica documentación en <b>programarfacil.com</b> así como a <b>ThingSpeak</b> por su maravillosa plataforma para el iot que nos permite de forma fácil conectar nuestros dispositivos a la nube y experimentar con el  iot.
