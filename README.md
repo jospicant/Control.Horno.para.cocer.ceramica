@@ -14,4 +14,4 @@ Nos apoyamos en la plataforma "ThingSpeak" para crear un canal sobre el cual env
 
 ## Agradecimientos  
 
-Agradecer a <b>Adafruit</b> por su librería para el manejo del MAX31856
+Agradecer a <b>Adafruit</b> por su librería para el manejo del MAX31856 y a <b>Luis del Valle</b> por su magnífica documentación en <b>programarfacil.com</b>
